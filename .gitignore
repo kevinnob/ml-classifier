@@ -1,0 +1,14 @@
+# C++ build files
+*.o
+*.out
+*.exe
+
+# macOS metadata
+.DS_Store
+
+# Temporary files
+*.log
+
+# Autograder build artifacts
+*.dSYM/
+
