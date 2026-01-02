@@ -1,63 +1,125 @@
-**ML Classifier**
+# ML Classifier — Naive Bayes Text Classification (C++)
 
-**Description:**
-This repository contains a compact implementation of a Multi-Variate Bernoulli Naive Bayes classifier written in C++ for classifying Piazza posts. The classifier learns which words are associated with each label from a training CSV file and then predicts labels for unseen posts. The code is intentionally simple and follows the EECS 280 project specification exactly so it can be used for automated grading.
+A C++17 command-line program that trains a **text classifier** on labeled Piazza posts and predicts the most likely label for new posts using a **bag-of-words Naive Bayes model**.  
+The project emphasizes **NLP fundamentals**, **probabilistic modeling**, and efficient use of C++ **container ADTs** (`map`, `set`) to build a complete end-to-end application.
 
-Key points:
-- Input: CSV files where the label is in the `tag` column and the post text is in the `content` column. Other columns are ignored.
-- Model: Bag-of-words (presence/absence only). Each post is treated as a set of unique words; duplicate words within a post are ignored.
-- Algorithm: Multi-Variate Bernoulli Naive Bayes using natural logarithms for probability sums.
-- Smoothing rules (implemented per spec):
-	- If a word occurs with a label in the training data: use P(w | label) = #(label, w) / #(label)
-	- Else if the word occurs somewhere in training data: use P(w | label) = #(w) / #(total_posts)
-	- Else (word never seen in training): use P(w | label) = 1 / #(total_posts)
-- Tie-breaking: If two labels have the same log-probability score for a post, the classifier picks the label that is alphabetically first.
+---
 
-**Files:** `classifier.cpp`, `csvstream.hpp`, sample CSV datasets, and instructor `.correct` output files.
+## Overview
 
-**Build**
-- **Requirements:**: A C++17-capable compiler (e.g. `g++`) and `make`.
-- **Build command:**
+This classifier learns from previously labeled posts (training set) and predicts labels for unseen posts (test set).  
+It treats each post as a **set of unique words** (bag-of-words model) and selects the label that maximizes a **log-probability score**.
+
+Supported label sets are **data-driven** (no hardcoded classes): the model uses exactly the labels present in the training data.
+
+---
+
+## Key Features
+
+- **Supervised text classification** using a Bernoulli-style Naive Bayes model
+- Bag-of-words representation using **unique tokens** (duplicates ignored)
+- Uses **log probabilities** for numerical stability
+- **Smoothing / fallback handling** for unseen words and unseen label-word pairs
+- Deterministic scoring by processing tokens in **alphabetical order**
+- Command-line interface with:
+  - Train-only mode (prints learned parameters)
+  - Train + test mode (prints predictions and accuracy)
+- Efficient implementation using `std::map` and `std::set`
+
+---
+
+## How It Works
+
+During training, the program computes:
+
+- Total number of training documents
+- Vocabulary size (unique words)
+- Per-label document counts (priors)
+- Word frequencies overall and per-label
+
+During prediction, for each candidate label, it computes:
+
+- `log P(label)` + sum over words in post of `log P(word | label)`
+- Predicts the label with the highest score (ties broken alphabetically)
+
+---
+
+## Project Structure
 
 ```
-make classifier.exe
+.
+├── classifier.cpp          # Training + prediction implementation
+├── csvstream.hpp           # CSV parsing helper
+├── *.csv                   # Training/testing datasets
+├── *.out.correct           # Reference outputs for verification
+├── Makefile
 ```
 
-**Usage**
-- Train-only mode:
+---
 
+## Build & Run
+
+### Build
+```bash
+make -j4
 ```
+
+### Train-only mode
+```bash
 ./classifier.exe TRAIN_FILE
 ```
 
-- Train + test mode:
-
+Example:
+```bash
+./classifier.exe train_small.csv
 ```
+
+### Train + test mode
+```bash
 ./classifier.exe TRAIN_FILE TEST_FILE
 ```
 
-- Exact usage message printed on bad args:
-
-```
-Usage: classifier.exe TRAIN_FILE [TEST_FILE]
-```
-
-**What the program prints**
-- In train-only mode, the program prints per-training-post information (if any), the number of training examples, vocabulary size, a list of classes with counts and log-priors, and classifier parameters (label:word counts and log-likelihoods).
-- In test mode, the program prints the number of training examples, then for each test post prints the correct label, predicted label, log-probability score, post content, and finally a performance summary (correct / total). The program sets `cout.precision(3)`.
-
-**CSV format**
-- The program uses the provided `csvstream.hpp` to read CSV files. Only the `tag` and `content` columns are used; other columns are ignored. You may assume content and tags are lowercase and contain no punctuation.
-
-**Testing**
-- Run the included test suite (compares produced output to instructor `.correct` files):
-
-```
-make test
+Example:
+```bash
+./classifier.exe train_small.csv test_small.csv
 ```
 
-**Notes**
-- The classifier implements smoothing per spec and breaks ties alphabetically. Error messages and exit codes follow the project specification exactly (prints usage on wrong args; prints `Error opening file: <filename>` and returns non-zero when a file cannot be opened).
-- All top-level code is in `classifier.cpp` as required.
+---
+
+## Verify Output (Recommended)
+
+Use `diff` to compare against provided reference outputs:
+
+```bash
+./classifier.exe train_small.csv > train_only.out
+diff -y -B train_only.out train_small_train_only.out.correct | less
+```
+
+```bash
+./classifier.exe train_small.csv test_small.csv > test.out
+diff -y -B test.out test_small.out.correct | less
+```
+
+---
+
+## Example Output (What You’ll See)
+
+- Training summary (number of examples, vocabulary size)
+- In train-only mode: learned priors and word likelihoods per label
+- In test mode: per-post predictions + final accuracy, e.g.
+
+```
+performance: 245 / 332 posts predicted correctly
+```
+
+---
+
+This project demonstrates practical fundamentals used in real ML/NLP systems:
+
+- Feature extraction (tokenization + bag-of-words)
+- Probabilistic modeling and smoothing
+- Scalable counting with hash/map-based data structures
+- Building a complete CLI ML pipeline: train → predict → evaluate
+- Careful handling of edge cases and deterministic output
 
 
