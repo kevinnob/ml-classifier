@@ -1,7 +1,19 @@
 **ML Classifier**
 
-- **Description:**: A small Multi-Variate Bernoulli Naive Bayes classifier for Piazza posts. The program trains on a CSV file containing `tag` and `content` columns and optionally predicts labels for a test CSV.
-- **Files:**: `classifier.cpp`, `csvstream.hpp`, sample CSV datasets and expected output files.
+**Description:**
+This repository contains a compact implementation of a Multi-Variate Bernoulli Naive Bayes classifier written in C++ for classifying Piazza posts. The classifier learns which words are associated with each label from a training CSV file and then predicts labels for unseen posts. The code is intentionally simple and follows the EECS 280 project specification exactly so it can be used for automated grading.
+
+Key points:
+- Input: CSV files where the label is in the `tag` column and the post text is in the `content` column. Other columns are ignored.
+- Model: Bag-of-words (presence/absence only). Each post is treated as a set of unique words; duplicate words within a post are ignored.
+- Algorithm: Multi-Variate Bernoulli Naive Bayes using natural logarithms for probability sums.
+- Smoothing rules (implemented per spec):
+	- If a word occurs with a label in the training data: use P(w | label) = #(label, w) / #(label)
+	- Else if the word occurs somewhere in training data: use P(w | label) = #(w) / #(total_posts)
+	- Else (word never seen in training): use P(w | label) = 1 / #(total_posts)
+- Tie-breaking: If two labels have the same log-probability score for a post, the classifier picks the label that is alphabetically first.
+
+**Files:** `classifier.cpp`, `csvstream.hpp`, sample CSV datasets, and instructor `.correct` output files.
 
 **Build**
 - **Requirements:**: A C++17-capable compiler (e.g. `g++`) and `make`.
